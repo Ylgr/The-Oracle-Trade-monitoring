@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       credential: {
         type: DataTypes.JSON,
         allowNull: false
+      },
+      type: {
+        type: DataTypes.STRING(256),
+        allowNull: true
       }
     },
     {
