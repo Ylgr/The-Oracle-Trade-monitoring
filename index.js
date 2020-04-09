@@ -12,7 +12,7 @@ const headquartersSpreadsheetRangeIndex = {
 };
 
 (async () => {
-  await sleep(2000)
+  await sleep(2000);
   try {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
     for (const accountKeyInfo of accountKeyInfos) {

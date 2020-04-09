@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('Spreadsheets', {
+  return sequelize.define('Infos', {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     {
-      tableName: 'spreadsheets',
+      tableName: 'infos',
       timestamps: false
     });
 }

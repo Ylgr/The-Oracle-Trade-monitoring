@@ -1,5 +1,3 @@
-const fs = require('fs');
-const readline = require('readline');
 const { google } = require('googleapis');
 const { getToken, getCredentialConfiguration, getExecuteSpreadsheet } = require('./repositoryServices');
 

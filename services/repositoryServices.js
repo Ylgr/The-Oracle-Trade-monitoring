@@ -1,5 +1,4 @@
 const models = require('../database').db;
-const Sequelize = require("sequelize");
 async function getCredentialConfiguration() {
   let credentialList = await models.Credentials.findAll({
     where: {
@@ -27,7 +26,7 @@ async function saveToken(tokenJson) {
 }
 
 async function getExecuteSpreadsheet() {
-  let spreadsheetList = await models.Spreadsheets.findAll({
+  let spreadsheetList = await models.Infos.findAll({
     where: {
       type: 'EXECUTE'
     }
@@ -35,9 +34,19 @@ async function getExecuteSpreadsheet() {
   return spreadsheetList[0].idToken;
 }
 
+async function getTelegramBotToken() {
+  let telegramBotToken = await models.Infos.findOne({
+    where: {
+      type: 'TELEGRAM_BOT'
+    }
+  });
+  return telegramBotToken.idToken;
+}
+
 module.exports = {
   getCredentialConfiguration,
   getExecuteSpreadsheet,
   getToken,
-  saveToken
+  saveToken,
+  getTelegramBotToken
 };
