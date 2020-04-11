@@ -43,10 +43,16 @@ async function getTelegramBotToken() {
   return telegramBotToken.idToken;
 }
 
+async function createOrder(side, amountRatio, pair, entry, profit, stop) {
+  let order = await models.Orders.upsert({side, amountRatio, pair, entry, profit, stop});
+  return order;
+}
+
 module.exports = {
   getCredentialConfiguration,
   getExecuteSpreadsheet,
   getToken,
   saveToken,
-  getTelegramBotToken
+  getTelegramBotToken,
+  createOrder
 };
