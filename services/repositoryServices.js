@@ -43,8 +43,22 @@ async function getTelegramBotToken() {
   return telegramBotToken.idToken;
 }
 
+async function getTelegramChannelId(channelName) {
+  let telegramBotToken = await models.Infos.findOne({
+    where: {
+      type: channelName
+    }
+  });
+  return telegramBotToken.idToken;
+}
+
 async function createOrder(side, amountRatio, pair, entry, profit, stop) {
-  let order = await models.Orders.upsert({side, amountRatio, pair, entry, profit, stop});
+  let order = await models.Orders.create({side, amountRatio, pair, entry, profit, stop});
+  return order;
+}
+
+async function createPostOrder(originOrderId, side, amountRatio, symbol, price, stopPrice, status = 'PENDING', pendingBy = null) {
+  let order = await models.PostOrders.create({originOrderId, side, amountRatio, symbol,  price, stopPrice, status, pendingBy});
   return order;
 }
 
@@ -54,5 +68,7 @@ module.exports = {
   getToken,
   saveToken,
   getTelegramBotToken,
-  createOrder
+  getTelegramChannelId,
+  createOrder,
+  createPostOrder,
 };

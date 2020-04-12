@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { getTelegramBotToken, createOrder } = require('./services/repositoryServices');
+const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrder } = require('./services/repositoryServices');
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -51,7 +51,12 @@ function parseNumber(numberString) {
         })
         if(side && pair && entry && profit && stop && amountRatio) {
             const order = await createOrder(side, amountRatio, pair, entry, profit, stop)
-            console.log('order: ', order)
+            if (order) {
+                const orderId = order.id
+
+            } else {
+
+            }
         } else {
             console.log('error')
             console.log('side: ', side)
@@ -75,17 +80,19 @@ function parseNumber(numberString) {
         //     bot.sendMessage(chatId, resp);
         // });
         //
-        // // Matches "/order [whatever]"
+        // Matches "/registry [whatever]"
+
+        // const registryChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_REGISTRY')
+        //
         // bot.onText(/registry (.+)/, (msg, match) => {
         //     // 'msg' is the received Message from Telegram
         //     // 'match' is the result of executing the regexp above on the text content
         //     // of the message
         //
         //     const chatId = msg.chat.id;
-        //     const resp = match[1]; // the captured "whatever"
-        //     console.log('resp: ',match)
+        //     const resp = match[1] + ' đã yêu cầu tham gia dự án Moon landing! \nId Telegram: ' + chatId; // the captured "whatever"
         //     // send back the matched "whatever" to the chat
-        //     bot.sendMessage(chatId, resp);
+        //     bot.sendMessage(registryChannelId, resp);
         // });
     } catch (err) {
         console.log(err)

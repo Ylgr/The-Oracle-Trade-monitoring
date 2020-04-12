@@ -39,6 +39,7 @@ const headquartersSpreadsheetRangeIndex = {
       //   timeInForce: 'GTC'
       // })
       // console.log(d)
+      console.log(d)
 
       // console.log('Test xoa lenh') // WORK
       // const d = await binance.sapiDeleteMarginOrder({

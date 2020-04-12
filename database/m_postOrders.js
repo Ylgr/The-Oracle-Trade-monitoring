@@ -37,6 +37,10 @@ module.exports = (sequelize, DataTypes) => {
             result: {
                 type: DataTypes.JSON,
                 allowNull: true
+            },
+            originOrderId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
             }
         },
         {
