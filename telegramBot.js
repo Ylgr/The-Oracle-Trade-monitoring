@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrder } = require('./services/repositoryServices');
+const { postOrderAndNotify, notifyOverviewOrder } = require('./services/marginOrderServices');
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -17,7 +18,7 @@ function parseNumber(numberString) {
         console.log('token: ', token)
         // Create a bot that uses 'polling' to fetch new updates
         // const bot = new TelegramBot(token, {polling: true});
-
+        const sentinelChannelId = getTelegramChannelId('TELEGRAM_CHANNEL_SENTINEL')
         // test message
         const mockMessage = 'buy 20% - pair btcusdt - entry 3750.25 3360.21 3125.5 - profit 4800 5400 - stop 3085'
         const orderProps = mockMessage.split('-')
@@ -52,8 +53,17 @@ function parseNumber(numberString) {
         if(side && pair && entry && profit && stop && amountRatio) {
             const order = await createOrder(side, amountRatio, pair, entry, profit, stop)
             if (order) {
+                await notifyOverviewOrder(order, token, sentinelChannelId)
                 const orderId = order.id
-
+                const firstOrders = entry.map(e => {
+                    return {
+                        side,
+                        symbol: pair,
+                        amountRatio,
+                        price: e,
+                        originOrderId: orderId
+                    }
+                })
             } else {
 
             }

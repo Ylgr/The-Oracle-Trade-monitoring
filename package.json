@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.2",
     "ccxt": "^1.23.81",
     "dotenv": "^8.2.0",
     "glob": "^7.1.6",
