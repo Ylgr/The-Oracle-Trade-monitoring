@@ -3,9 +3,9 @@ const Sequelize = require("sequelize");
 const glob = require('glob')
 require('dotenv').config()
 
-const sequelize = new Sequelize(process.env.MYSQL_DB || '', process.env.MYSQL_USER || '', process.env.MYSQL_PASSWORD || '', {
-    host: process.env.MYSQL_HOST || '',
-    port: process.env.MYSQL_PORT || 3306,
+const sequelize = new Sequelize('the-oracle-trade', 'TheOracle', 'TheOracle@2020', {
+    host: '127.0.0.1',
+    port: 3306,
     dialect: 'mysql',
     pool: {
       max: 5,

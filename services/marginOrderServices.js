@@ -1,21 +1,12 @@
 const { loadSpreadsheet, getTelegramChannelId } = require('./spreadsheetServices');
+const { telegramMessageRequest } = require('./telegramServices');
 const ccxt = require ('ccxt');
-const axios = require('axios');
 
 const headquartersSpreadsheetRangeIndex = {
     apiInfo : 'API Info!B3:E10',
     apiMaginOrder : 'API Order!B3:D10',
     apiMarginBalance : 'API Balance!B3:D10',
 };
-
-const instance = axios.create({
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    responseType: 'json',
-    crossDomain: true,
-    withCredentials: false
-});
 
 const mockPostOrderAndNotifyReturn = [
     {
@@ -65,10 +56,6 @@ const mockPostOrderAndNotifyReturn = [
     }
 ]
 
-function telegramMessageRequest(telegramToken, channelId, text) {
-    return instance.get('https://api.telegram.org/bot' + telegramToken + '/sendMessage?chat_id=' + channelId + '&text=' + encodeURIComponent(text))
-}
-
 async function notifyOverviewOrder(order, telegramToken, sentinelTelegramChannelId) {
     telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thực hiện lệnh: \n' + JSON.stringify(order, null, 2))
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
@@ -115,7 +102,8 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                 // telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Đặt lệnh thành công cho ' + accountKeyInfo[2] + ': \n' + JSON.stringify(postOrder, null, 2))
                 // telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Đặt lệnh thành công: \n' + JSON.stringify(postOrder, null, 2))
             }
-            return ordersResult
+            // return ordersResult
+            return mockPostOrderAndNotifyReturn
         } catch (e) {
             telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)
             telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)

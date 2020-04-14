@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrder } = require('./services/repositoryServices');
+const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrders } = require('./services/repositoryServices');
 const { postOrderAndNotify, notifyOverviewOrder } = require('./services/marginOrderServices');
 
 const sleep = (milliseconds) => {
@@ -15,7 +15,6 @@ function parseNumber(numberString) {
     await sleep(2000);
     try {
         const token = await getTelegramBotToken();
-        console.log('token: ', token)
         // Create a bot that uses 'polling' to fetch new updates
         // const bot = new TelegramBot(token, {polling: true});
         const sentinelChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_SENTINEL')
@@ -66,6 +65,19 @@ function parseNumber(numberString) {
                     }
                 })
                 const postOrderResult = await postOrderAndNotify(entryOrders, token, sentinelChannelId)
+                for (const e of entryOrders) {
+                    e.amountRatio = e.amountRatio/entryOrders.length
+                    const orderCompareInBinance = postOrderResult
+                        .find(order => parseNumber(order.price).toFixed(4) === e.price.toFixed(4))
+                    if(orderCompareInBinance) {
+                        entryOrders['binanceOrderId'] = orderCompareInBinance.orderId
+                        entryOrders['status'] = 'PENDING'
+                    } else {
+                        entryOrders['status'] = 'FAILED'
+                    }
+                    await notifyOverviewOrder(e, token, sentinelChannelId)
+                }
+                await createPostOrders(entryOrders)
             } else {
 
             }

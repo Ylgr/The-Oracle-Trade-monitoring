@@ -62,6 +62,15 @@ async function createPostOrder(originOrderId, side, amountRatio, symbol, price, 
   return order;
 }
 
+async function createPostOrders(orders) {
+  let order = await models.PostOrders.bulkCreate(orders);
+  return order;
+}
+
+async function getPostOrderByStatus(status) {
+  let orders = await models.PostOrders.findAll({status});
+  return orders;
+}
 module.exports = {
   getCredentialConfiguration,
   getExecuteSpreadsheet,
@@ -71,4 +80,6 @@ module.exports = {
   getTelegramChannelId,
   createOrder,
   createPostOrder,
+  createPostOrders,
+  getPostOrderByStatus
 };
