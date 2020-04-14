@@ -29,6 +29,10 @@ const headquartersSpreadsheetRangeIndex = {
       if(accountKeyInfo[3] === 'TuNV') { // write balance information to sheet
       }
 
+      // console.log('Test lay balance') // WORK
+      const maxAmount = await binance.sapiGetMarginAccount();
+      console.log(maxAmount.userAssets.find(e=> e.asset === 'USDT').free)
+
       // console.log('Test dat lenh') // WORK
       // const d = await binance.sapiPostMarginOrder({
       //   symbol: 'BTCUSDT',
@@ -39,7 +43,6 @@ const headquartersSpreadsheetRangeIndex = {
       //   timeInForce: 'GTC'
       // })
       // console.log(d)
-      console.log(d)
 
       // console.log('Test xoa lenh') // WORK
       // const d = await binance.sapiDeleteMarginOrder({

@@ -18,7 +18,7 @@ function parseNumber(numberString) {
         console.log('token: ', token)
         // Create a bot that uses 'polling' to fetch new updates
         // const bot = new TelegramBot(token, {polling: true});
-        const sentinelChannelId = getTelegramChannelId('TELEGRAM_CHANNEL_SENTINEL')
+        const sentinelChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_SENTINEL')
         // test message
         const mockMessage = 'buy 20% - pair btcusdt - entry 3750.25 3360.21 3125.5 - profit 4800 5400 - stop 3085'
         const orderProps = mockMessage.split('-')
@@ -55,15 +55,17 @@ function parseNumber(numberString) {
             if (order) {
                 await notifyOverviewOrder(order, token, sentinelChannelId)
                 const orderId = order.id
-                const firstOrders = entry.map(e => {
+                const entryOrders = entry.map(e => {
                     return {
                         side,
                         symbol: pair,
                         amountRatio,
                         price: e,
-                        originOrderId: orderId
+                        originOrderId: orderId,
+                        type: 'LIMIT'
                     }
                 })
+                const postOrderResult = await postOrderAndNotify(entryOrders, token, sentinelChannelId)
             } else {
 
             }
