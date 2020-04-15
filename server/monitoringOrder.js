@@ -8,6 +8,11 @@ const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
 };
 
+function parseNumber(numberString) {
+    if(isNaN(Number(numberString))) throw new Error(`Cannot detect ${numberString} please try again!`)
+    else return Number(numberString)
+}
+
 const headquartersSpreadsheetRangeIndex = {
     apiInfo : 'API Info!B3:D10'
 };
@@ -31,6 +36,15 @@ const headquartersSpreadsheetRangeIndex = {
         for (const symbol of symbols) {
             const priceIndex = await binance.sapiGetMarginPriceIndex({symbol});
             telegramMessageRequest(token, telegramScoutId, JSON.stringify(priceIndex, null, 2))
+
+            // If current price > market price in BUY market order, stop stop loss order
+            // const lowestPriceOrder = pendingPostOrders
+            // if (parseNumber(priceIndex.price) > )
+
+            // Query all open order Id
+
+            // If orders limit filled, new order stop loss to all accounts, change status limit to filled, stop loss to waiting, market to waiting
+
             // const pendingOrderCompareSymbol = pendingPostOrders.filter(e => e.symbol === symbol)
             // for(const pendingPostOrder of pendingOrderCompareSymbol) {
             //     if(pendingPostOrder.side === 'BUY') {

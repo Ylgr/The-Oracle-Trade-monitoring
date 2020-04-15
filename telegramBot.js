@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrders } = require('./services/repositoryServices');
-const { postOrderAndNotify, notifyOverviewOrder } = require('./services/marginOrderServices');
+const { postOrderAndNotify, notifyOverviewOrder, getOppositeSide } = require('./services/marginOrderServices');
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -71,13 +71,21 @@ function parseNumber(numberString) {
                         .find(order => parseNumber(order.price).toFixed(4) === e.price.toFixed(4))
                     if(orderCompareInBinance) {
                         entryOrders['binanceOrderId'] = orderCompareInBinance.orderId
-                        entryOrders['status'] = 'PENDING'
+                        entryOrders['status'] = 'WAITING'
                     } else {
                         entryOrders['status'] = 'FAILED'
                     }
                     await notifyOverviewOrder(e, token, sentinelChannelId)
                 }
                 await createPostOrders(entryOrders)
+
+                // create post order stop loss with status = pending, pending by limit request
+                const stopLossOrder = {
+                    side: getOppositeSide(side),
+
+                }
+                // create post order market  with status = pending, pending by stop loss request
+
             } else {
 
             }

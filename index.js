@@ -33,6 +33,8 @@ const headquartersSpreadsheetRangeIndex = {
       const maxAmount = await binance.sapiGetMarginAccount();
       console.log(maxAmount.userAssets.find(e=> e.asset === 'USDT').free)
 
+      // DONE test newClientOrderId if it work!! ease game
+
       // console.log('Test dat lenh') // WORK
       // const d = await binance.sapiPostMarginOrder({
       //   symbol: 'BTCUSDT',
@@ -40,16 +42,18 @@ const headquartersSpreadsheetRangeIndex = {
       //   type: 'LIMIT',
       //   quantity: '0.01',
       //   price: '3281',
-      //   timeInForce: 'GTC'
+      //   timeInForce: 'GTC',
+      //   newClientOrderId: 0
       // })
-      // console.log(d)
+      // console.log(d) // 1835673939
 
       // console.log('Test xoa lenh') // WORK
       // const d = await binance.sapiDeleteMarginOrder({
       //   symbol: 'BTCUSDT',
-      //   orderId: 1771090118
+      //   // orderId: 0
+      //   origClientOrderId: 0
       // })
-      // console.log(d)
+      // console.log(d) //1835673939
 
       // console.log('Test vay tien san') // WORK
       // const d = await binance.sapiPostMarginLoan({

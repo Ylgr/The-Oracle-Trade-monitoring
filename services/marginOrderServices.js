@@ -96,7 +96,8 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                 //   type: order.type,
                 //   quantity: quantity,
                 //   price: order.price,
-                //   timeInForce: 'GTC'
+                //   timeInForce: 'GTC',
+                //   newClientOrderId: order.id
                 // })
                 // ordersResult.push(postOrder)
                 // telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Đặt lệnh thành công cho ' + accountKeyInfo[2] + ': \n' + JSON.stringify(postOrder, null, 2))
@@ -111,7 +112,12 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
     }
 }
 
+function getOppositeSide(side) {
+    return size === 'BUY' ? 'BUY' : 'SELL'
+}
+
 module.exports = {
     postOrderAndNotify,
-    notifyOverviewOrder
+    notifyOverviewOrder,
+    getOppositeSide
 };
