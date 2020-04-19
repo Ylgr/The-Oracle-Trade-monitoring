@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrders } = require('./services/repositoryServices');
+const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrders, createPostOrder } = require('./services/repositoryServices');
 const { postOrderAndNotify, notifyOverviewOrder, getOppositeSide } = require('./services/marginOrderServices');
 
 const sleep = (milliseconds) => {
@@ -70,22 +70,41 @@ function parseNumber(numberString) {
                     const orderCompareInBinance = postOrderResult
                         .find(order => parseNumber(order.price).toFixed(4) === e.price.toFixed(4))
                     if(orderCompareInBinance) {
-                        entryOrders['binanceOrderId'] = orderCompareInBinance.orderId
-                        entryOrders['status'] = 'WAITING'
+                        e['binanceOrderId'] = orderCompareInBinance.clientOrderId
+                        e['status'] = 'WAITING'
                     } else {
-                        entryOrders['status'] = 'FAILED'
+                        e['status'] = 'FAILED'
                     }
                     await notifyOverviewOrder(e, token, sentinelChannelId)
                 }
-                await createPostOrders(entryOrders)
-
-                // create post order stop loss with status = pending, pending by limit request
+                const orders = await createPostOrders(entryOrders)
+                // create post order stop loss with status = pending, pending by last limit request
                 const stopLossOrder = {
                     side: getOppositeSide(side),
-
+                    amountRatio: 1,
+                    symbol: pair,
+                    price: parseNumber(stop),
+                    stopPrice: getOppositeSide(side) === 'BUY' ? stop/1.01 : stop*1.01,
+                    status: 'PENDING',
+                    pendingBy: orders[orders.length-1].id,
+                    originOrderId: orderId,
+                    type: 'STOP_LOSS'
                 }
-                // create post order market  with status = pending, pending by stop loss request
-
+                await createPostOrder(stopLossOrder)
+                // create post order market  with status = pending, pending by first limit request
+                const profitOrders = profit.map(e => {
+                    return {
+                        side: getOppositeSide(side),
+                        amountRatio: Math.floor(amountRatio/profit.length* 10000) / 10000,
+                        price: e,
+                        originOrderId: orderId,
+                        type: 'LIMIT',
+                        status: 'PENDING',
+                        pendingBy: orders[0].id,
+                        symbol: pair,
+                    }
+                })
+                await createPostOrders(profitOrders)
             } else {
 
             }

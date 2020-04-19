@@ -57,9 +57,9 @@ async function createOrder(side, amountRatio, pair, entry, profit, stop) {
   return order;
 }
 
-async function createPostOrder(originOrderId, side, amountRatio, symbol, price, stopPrice, status = 'PENDING', pendingBy = null) {
-  let order = await models.PostOrders.create({originOrderId, side, amountRatio, symbol,  price, stopPrice, status, pendingBy});
-  return order;
+async function createPostOrder(order) {
+  let result = await models.PostOrders.create(order);
+  return result;
 }
 
 async function createPostOrders(orders) {
@@ -69,6 +69,11 @@ async function createPostOrders(orders) {
 
 async function getPostOrderByStatus(status) {
   let orders = await models.PostOrders.findAll({status});
+  return orders;
+}
+
+async function createValueOrderDetails(detail) {
+  let orders = await models.ValueOrderDetails.create(detail);
   return orders;
 }
 module.exports = {
@@ -81,5 +86,6 @@ module.exports = {
   createOrder,
   createPostOrder,
   createPostOrders,
-  getPostOrderByStatus
+  getPostOrderByStatus,
+  createValueOrderDetails
 };

@@ -1,4 +1,5 @@
 const { loadSpreadsheet, getTelegramChannelId } = require('./spreadsheetServices');
+const { createValueOrderDetails } = require('./repositoryServices');
 const { telegramMessageRequest } = require('./telegramServices');
 const ccxt = require ('ccxt');
 
@@ -64,6 +65,11 @@ async function notifyOverviewOrder(order, telegramToken, sentinelTelegramChannel
     }
 }
 
+function parseNumber(numberString) {
+    if(isNaN(Number(numberString))) throw new Error(`Cannot detect ${numberString} please try again!`)
+    else return Number(numberString)
+}
+
 async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
     for (const accountKeyInfo of accountKeyInfos) {
@@ -75,7 +81,10 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
             });
             await binance.loadMarkets();
             const ordersResult = []
+            let totalAmount = 0
+            let originOrderId
             for (const order of orders) {
+                originOrderId = order.originOrderId
                 const symbol = order.symbol
                 // const orderByAsset = symbol.substring(symbol.length - 4, symbol.length)
                 const orderByAsset = symbol.substring(symbol.length - 4, symbol.length) === 'USDT'
@@ -87,9 +96,9 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                     telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Ko phân tích được tiền sử dụng trong cặp: ' + symbol)
                     return
                 }
-                const maxAmount = (await binance.sapiGetMarginAccount()).userAssets.find(e=> e.asset === 'USDT').free;
+                const marginAccount = await binance.sapiGetMarginAccount()
+                const maxAmount = marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
                 const quantity =  (maxAmount * order.amountRatio / order.price / orders.length).toFixed(4)
-                console.log('quantity: ', quantity)
                 // const postOrder = await binance.sapiPostMarginOrder({
                 //   symbol: symbol,
                 //   side: order.side,
@@ -99,12 +108,19 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                 //   timeInForce: 'GTC',
                 //   newClientOrderId: order.id
                 // })
-                // ordersResult.push(postOrder)
+                const postOrder = mockPostOrderAndNotifyReturn[orders.indexOf(order)]
+                totalAmount += parseNumber(postOrder.origQty)
+                ordersResult.push(postOrder)
                 // telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Đặt lệnh thành công cho ' + accountKeyInfo[2] + ': \n' + JSON.stringify(postOrder, null, 2))
                 // telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Đặt lệnh thành công: \n' + JSON.stringify(postOrder, null, 2))
             }
-            // return ordersResult
-            return mockPostOrderAndNotifyReturn
+            await createValueOrderDetails({
+                owner: escape(accountKeyInfo[2]),
+                apiKey: accountKeyInfo[0],
+                amount: Math.floor(totalAmount* 10000) / 10000,
+                originOrderId: originOrderId,
+            })
+            return ordersResult
         } catch (e) {
             telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)
             telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)
@@ -113,7 +129,7 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
 }
 
 function getOppositeSide(side) {
-    return size === 'BUY' ? 'BUY' : 'SELL'
+    return side === 'BUY' ? 'SELL' : 'BUY'
 }
 
 module.exports = {

@@ -45,6 +45,10 @@ module.exports = (sequelize, DataTypes) => {
             binanceOrderId: {
                 type: DataTypes.STRING,
                 allowNull: true
+            },
+            type: {
+                type: DataTypes.STRING,
+                allowNull: true
             }
         },
         {
