@@ -22,9 +22,9 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: true
             },
-            fillAmount: {
-                type: DataTypes.FLOAT,
-                defaultValue: 0
+            isFill: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
             }
         },
         {

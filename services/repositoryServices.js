@@ -76,6 +76,14 @@ async function createValueOrderDetails(detail) {
   let orders = await models.ValueOrderDetails.create(detail);
   return orders;
 }
+
+async function updateFillOrders(originOrderIds) {
+  const valueOrderDetails = await models.ValueOrderDetails.findAll({where: {originOrderId: originOrderIds}})
+  const fillValueOrderDetails = valueOrderDetails
+  const orders = await models.ValueOrderDetails.bulkCreate(fillValueOrderDetails, {updateOnDuplicate : true });
+  return orders;
+}
+
 module.exports = {
   getCredentialConfiguration,
   getExecuteSpreadsheet,
@@ -87,5 +95,6 @@ module.exports = {
   createPostOrder,
   createPostOrders,
   getPostOrderByStatus,
-  createValueOrderDetails
+  createValueOrderDetails,
+  updateFillOrders
 };

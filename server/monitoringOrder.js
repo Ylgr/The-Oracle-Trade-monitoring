@@ -1,6 +1,6 @@
 const { loadSpreadsheet } = require('../services/spreadsheetServices');
 const { telegramMessageRequest } = require('../services/telegramServices');
-const { getPostOrderByStatus, getTelegramChannelId, getTelegramBotToken } = require('../services/repositoryServices');
+const { getPostOrderByStatus, getTelegramChannelId, getTelegramBotToken, updateFillOrders } = require('../services/repositoryServices');
 const { uniq } = require('lodash')
 const ccxt = require ('ccxt');
 
@@ -31,6 +31,22 @@ const headquartersSpreadsheetRangeIndex = {
             enableRateLimit: true
         });
         await binance.loadMarkets ();
+        let isOrderFill = false
+        // get waiting order
+        const waitingPostOrders = await getPostOrderByStatus('WAITING')
+
+        // compare with order in exchange
+        const openOrders = await binance.sapiGetMarginOpenOrders()
+
+        // update db if have any waiting order not exist
+        if (openOrders.length === waitingPostOrders.length) {
+            const clientOrderIdsInOpenOrder = openOrders.map(e => e.clientOrderId)
+            const fillOrderIds = waitingPostOrders.filter(e => clientOrderIdsInOpenOrder.include(e.originOrderId.toString())).map(e=>e.originOrderId)
+            await updateFillOrders(fillOrderIds)
+            isOrderFill = true
+            telegramMessageRequest(token, telegramScoutId, 'Khớp lệnh: ' + fillOrderIds.join(', '))
+        }
+
         const pendingPostOrders = await getPostOrderByStatus('PENDING')
         const symbols = uniq(pendingPostOrders.map(e=>e.symbol))
         for (const symbol of symbols) {
@@ -40,8 +56,6 @@ const headquartersSpreadsheetRangeIndex = {
             // If current price > market price in BUY market order, stop stop loss order
             // const lowestPriceOrder = pendingPostOrders
             // if (parseNumber(priceIndex.price) > )
-
-            // Query all open order Id
 
             // If orders limit filled, new order stop loss to all accounts, change status limit to filled, stop loss to waiting, market to waiting
 
