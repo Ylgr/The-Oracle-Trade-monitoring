@@ -70,7 +70,7 @@ function parseNumber(numberString) {
     else return Number(numberString)
 }
 
-async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
+async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId, orderAmount) {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
     for (const accountKeyInfo of accountKeyInfos) {
         try {
@@ -97,7 +97,7 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                     return
                 }
                 const marginAccount = await binance.sapiGetMarginAccount()
-                const maxAmount = marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
+                const maxAmount = orderAmount ? orderAmount : marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
                 const quantity =  (maxAmount * order.amountRatio / order.price / orders.length).toFixed(4)
                 // const postOrder = await binance.sapiPostMarginOrder({
                 //   symbol: symbol,

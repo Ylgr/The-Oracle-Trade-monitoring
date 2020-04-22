@@ -62,6 +62,11 @@ async function createPostOrder(order) {
   return result;
 }
 
+async function createOrUpdatePostOrder(order) {
+  let result = await models.PostOrders.upsert(order);
+  return result;
+}
+
 async function createPostOrders(orders) {
   let order = await models.PostOrders.bulkCreate(orders);
   return order;
@@ -79,9 +84,17 @@ async function createValueOrderDetails(detail) {
 
 async function updateFillOrders(originOrderIds) {
   const valueOrderDetails = await models.ValueOrderDetails.findAll({where: {originOrderId: originOrderIds}})
-  const fillValueOrderDetails = valueOrderDetails
-  const orders = await models.ValueOrderDetails.bulkCreate(fillValueOrderDetails, {updateOnDuplicate : true });
-  return orders;
+  valueOrderDetails.forEach(e => e.isFill = true)
+  const updateValueOrder = await models.ValueOrderDetails.bulkCreate(valueOrderDetails, {updateOnDuplicate : true });
+  const postOrders = await models.PostOrders.findAll({where: {id: originOrderIds}})
+  postOrders.forEach(e => e.status = 'FILLED')
+  await models.PostOrders.bulkCreate(postOrders, {updateOnDuplicate : true });
+  return updateValueOrder
+}
+
+async function getFilledOrderByOriginId(originOrderIds) {
+  const valueOrderDetails = await models.ValueOrderDetails.findAll({where: {originOrderId: originOrderIds}})
+  return valueOrderDetails;
 }
 
 module.exports = {
@@ -96,5 +109,6 @@ module.exports = {
   createPostOrders,
   getPostOrderByStatus,
   createValueOrderDetails,
-  updateFillOrders
+  updateFillOrders,
+  createOrUpdatePostOrder
 };
