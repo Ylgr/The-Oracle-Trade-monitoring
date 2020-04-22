@@ -99,20 +99,20 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                 const marginAccount = await binance.sapiGetMarginAccount()
                 const maxAmount = orderAmount ? orderAmount : marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
                 const quantity =  (maxAmount * order.amountRatio / order.price / orders.length).toFixed(4)
-                // const postOrder = await binance.sapiPostMarginOrder({
-                //   symbol: symbol,
-                //   side: order.side,
-                //   type: order.type,
-                //   quantity: quantity,
-                //   price: order.price,
-                //   timeInForce: 'GTC',
-                //   newClientOrderId: order.id
-                // })
-                const postOrder = mockPostOrderAndNotifyReturn[orders.indexOf(order)]
+                const postOrder = await binance.sapiPostMarginOrder({
+                  symbol: symbol,
+                  side: order.side,
+                  type: order.type,
+                  quantity: quantity,
+                  price: order.price,
+                  timeInForce: 'GTC',
+                  newClientOrderId: order.id
+                })
+                // const postOrder = mockPostOrderAndNotifyReturn[orders.indexOf(order)]
                 totalAmount += parseNumber(postOrder.origQty)
                 ordersResult.push(postOrder)
-                // telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Đặt lệnh thành công cho ' + accountKeyInfo[2] + ': \n' + JSON.stringify(postOrder, null, 2))
-                // telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Đặt lệnh thành công: \n' + JSON.stringify(postOrder, null, 2))
+                telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Đặt lệnh thành công cho ' + accountKeyInfo[2] + ': \n' + JSON.stringify(postOrder, null, 2))
+                telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Đặt lệnh thành công: \n' + JSON.stringify(postOrder, null, 2))
             }
             await createValueOrderDetails({
                 owner: escape(accountKeyInfo[2]),
