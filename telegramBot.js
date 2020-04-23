@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const { getTelegramBotToken, createOrder, getTelegramChannelId, createPostOrders, createPostOrder } = require('./services/repositoryServices');
-const { postOrderAndNotify, notifyOverviewOrder, getOppositeSide } = require('./services/marginOrderServices');
+const { postOrderAndNotify, notifyOverviewOrder, getOppositeSide, loanAndNotify } = require('./services/marginOrderServices');
 
 const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -113,10 +113,10 @@ function parseNumber(numberString) {
                         })
                         await createPostOrders(profitOrders)
                     } else {
-                        bot.sendMessage(chatId, 'Có lỗi khi tạo lệnh, vui lòng báo lại cho Toái Nguyệt xử lý!')
+                        await bot.sendMessage(chatId, 'Có lỗi khi tạo lệnh, vui lòng báo lại cho Toái Nguyệt xử lý!')
                     }
                 } else {
-                    bot.sendMessage(chatId, 'Có lỗi khi tạo lệnh, vui lòng xe, lại các thông tin đã nhập: \n' +
+                    await bot.sendMessage(chatId, 'Có lỗi khi tạo lệnh, vui lòng xe, lại các thông tin đã nhập: \n' +
                         `side: ${side}\n` +
                         `amountRatio: ${amountRatio}\n` +
                         `pair: ${pair}\n` +
@@ -125,10 +125,30 @@ function parseNumber(numberString) {
                         `stop: ${stop}`
                     )
                 }
-            } else bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
+            } else await bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
         });
 
-
+        bot.onText(/loan (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const resp = match[1]; // the captured "whatever"
+            console.log('Getting load message: ', resp)
+            if (chatId.toString() === orderChannelId) {
+                // const mockMessage = '20% USDT'
+                const loadInfo = resp
+                const splitOrderInfo = loadInfo.split(' ').filter(e => e !== '')
+                const amountPrice = splitOrderInfo[0]
+                const lastInAmountPrice = amountPrice.slice(amountPrice.length - 1)
+                let amountRatio
+                if(lastInAmountPrice === '%' || amountPrice > 1) {
+                    amountRatio = parseNumber(amountPrice.slice(0, amountPrice.length - 1))/100
+                } else if (amountPrice <= 1 && amountPrice > 0) {
+                    amountRatio = amountPrice
+                }
+                const asset = splitOrderInfo[1]
+                const result = await loanAndNotify({asset, amountRatio}, token, sentinelChannelId)
+                await bot.sendMessage(chatId, JSON.stringify(result))
+            } else await bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
+        });
 
         const registryChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_REGISTRY')
         bot.onText(/registry (.+)/, (msg, match) => {

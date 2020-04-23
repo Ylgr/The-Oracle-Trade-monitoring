@@ -70,6 +70,70 @@ function parseNumber(numberString) {
     else return Number(numberString)
 }
 
+async function loanAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
+    const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
+    let loanResults = []
+    for (const accountKeyInfo of accountKeyInfos) {
+        try {
+            const binance = new ccxt.binance({
+                apiKey: accountKeyInfo[0],
+                secret: accountKeyInfo[1],
+                enableRateLimit: true
+            });
+            await binance.loadMarkets();
+            for (const order of orders) {
+                const maxLoan = await binance.sapiGetMarginMaxBorrowable({"asset": order.asset});
+                const loanAmount = maxLoan*orders.amountRatio
+                const loanResult = await binance.sapiPostMarginLoan({
+                  asset: order.asset,
+                  amount: loanAmount
+                })
+                loanResults.push({ [accountKeyInfo[2]] : loanAmount + ' ' + order.asset })
+                telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Vay thành công ' + loanAmount + ' ' + order.asset + ' cho ' + accountKeyInfo[2])
+                telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Vay thành công ' + loanAmount + ' ' + order.asset)
+            }
+        } catch (e) {
+            telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi vay tiền sàn, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
+            telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi vay tiền sàn, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
+        }
+    }
+    return loanResults
+}
+
+
+async function repayAllAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
+    const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
+    let repayResults = []
+    for (const accountKeyInfo of accountKeyInfos) {
+        try {
+            const binance = new ccxt.binance({
+                apiKey: accountKeyInfo[0],
+                secret: accountKeyInfo[1],
+                enableRateLimit: true
+            });
+            await binance.loadMarkets();
+            for (const order of orders) {
+                const loanResult = await binance.sapiGetMarginLoan({
+                    asset: order.asset,
+                    startTime: order.startTime
+                })
+                const loanRecords = loanResult.rows.filter(e => e.status === 'CONFIRMED')
+                for (const loanRecord of loanRecords) {
+                    const result = await binance.sapiPostMarginRepay({
+                        asset: order.asset,
+                        amount: loanRecord.amount
+                    })
+                    repayResults.push({ [accountKeyInfo[2]] : loanRecord.amount + ' ' + order.asset })
+                }
+            }
+        } catch (e) {
+            telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi vay tiền sàn, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
+            telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi vay tiền sàn, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
+        }
+    }
+    return repayResults
+}
+
 async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId, orderAmount) {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
     for (const accountKeyInfo of accountKeyInfos) {
@@ -122,8 +186,8 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
             })
             return ordersResult
         } catch (e) {
-            telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)
-            telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e)
+            telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
+            telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
         }
     }
 }
@@ -135,5 +199,7 @@ function getOppositeSide(side) {
 module.exports = {
     postOrderAndNotify,
     notifyOverviewOrder,
-    getOppositeSide
+    getOppositeSide,
+    loanAndNotify,
+    repayAllAndNotify
 };
