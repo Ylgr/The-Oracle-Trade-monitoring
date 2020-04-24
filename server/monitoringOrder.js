@@ -47,7 +47,7 @@ const headquartersSpreadsheetRangeIndex = {
             let fillOrders = []
             let fillValueOrders = []
             let totalFillAmountRatio = 0
-            if (openOrders.length === waitingPostOrders.length) {
+            if (openOrders.length === waitingPostOrders.length && openOrders.length !== 0) {
                 const clientOrderIdsInOpenOrder = openOrders.map(e => e.clientOrderId)
                 fillOrders = waitingPostOrders.filter(e => !clientOrderIdsInOpenOrder.include(e.originOrderId.toString()))
                 const fillOrderIds = fillOrders.map(e => e.originOrderId)
