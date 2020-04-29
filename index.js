@@ -1,14 +1,9 @@
 const { loadSpreadsheet } = require('./services/spreadsheetServices');
+const { headquartersSpreadsheetRangeIndex } = require('./constant/constant');
 const ccxt = require ('ccxt');
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
-};
-
-const headquartersSpreadsheetRangeIndex = {
-  apiInfo : 'API Info!B3:D10',
-  apiMaginOrder : 'API Order!B3:D10',
-  apiMarginBalance : 'API Balance!B3:D10',
 };
 
 (async () => {

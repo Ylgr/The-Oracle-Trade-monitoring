@@ -1,13 +1,8 @@
 const { loadSpreadsheet, getTelegramChannelId } = require('./spreadsheetServices');
 const { createValueOrderDetails } = require('./repositoryServices');
 const { telegramMessageRequest } = require('./telegramServices');
+const { headquartersSpreadsheetRangeIndex } = require('../constant/constant');
 const ccxt = require ('ccxt');
-
-const headquartersSpreadsheetRangeIndex = {
-    apiInfo : 'API Info!B3:E10',
-    apiMaginOrder : 'API Order!B3:D10',
-    apiMarginBalance : 'API Balance!B3:D10',
-};
 
 const mockPostOrderAndNotifyReturn = [
     {
