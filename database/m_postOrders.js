@@ -54,6 +54,10 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 allowNull: true
             },
+            waitPrice: {
+                type: DataTypes.FLOAT,
+                allowNull: true
+            }
         },
         {
             tableName: 'post_orders',

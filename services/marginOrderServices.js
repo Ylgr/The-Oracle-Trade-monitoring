@@ -78,7 +78,7 @@ async function loanAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
             await binance.loadMarkets();
             for (const order of orders) {
                 const maxLoan = await binance.sapiGetMarginMaxBorrowable({"asset": order.asset});
-                const loanAmount = maxLoan*orders.amountRatio
+                const loanAmount = maxLoan*order.amount
                 const loanResult = await binance.sapiPostMarginLoan({
                   asset: order.asset,
                   amount: loanAmount

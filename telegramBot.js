@@ -68,17 +68,52 @@ async function createOrderWithoutWait(order, telegramToken, sentinelChannelId, b
     await createPostOrders(profitOrders)
 }
 
-async function createOrderWithWait(order, telegramToken, sentinelChannelId, bot, chatId) {
+async function createOrderWithWait(order) {
     const entryOrder = order.entry.map(e => {
         return {
             side: order.side,
             symbol: order.pair,
-            amountRatio: order.entry / order.entry.length,
+            amountRatio: 1 / order.entry.length,
             price: e,
-            originOrderId: orderId,
-            type: 'LIMIT'
+            stopPrice: order.entry,
+            originOrderId: order.id,
+            pendingBy: 0,
+            status: 'PENDING',
+            type: 'STOP_LOSS',
+            role: 'ENTRY',
+            waitPrice: order.waitPrice
         }
     })
+    const entryPostOrders = await createPostOrders(entryOrder)
+    // create post order stop loss with status = pending, pending by last limit request
+    const stopLossOrder = {
+        side: getOppositeSide(order.side),
+        amountRatio: 1,
+        symbol: order.pair,
+        price: parseNumber(order.stop),
+        stopPrice: getOppositeSide(order.side) === 'BUY' ? order.stop / 1.01 : order.stop * 1.01,
+        status: 'PENDING',
+        pendingBy: entryPostOrders[entryPostOrders.length - 1].id,
+        originOrderId: order.id,
+        type: 'STOP_LOSS',
+        role: 'STOP_LOSS'
+    }
+    await createPostOrder(stopLossOrder)
+    // create post order market  with status = pending, pending by first limit request
+    const profitOrders = order.profit.map(e => {
+        return {
+            side: getOppositeSide(order.side),
+            amountRatio: 1/order.profit.length,
+            price: e,
+            originOrderId: order.id,
+            type: 'LIMIT',
+            status: 'PENDING',
+            pendingBy: entryPostOrders[0].id,
+            symbol: order.pair,
+            role: 'PROFIT'
+        }
+    })
+    await createPostOrders(profitOrders)
 }
 
 (async () => {
@@ -86,17 +121,15 @@ async function createOrderWithWait(order, telegramToken, sentinelChannelId, bot,
     try {
         const token = await getTelegramBotToken();
         // Create a bot that uses 'polling' to fetch new updates
-        const bot = new TelegramBot(token, {polling: true});
+        // const bot = new TelegramBot(token, {polling: true});
         const sentinelChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_SENTINEL')
         const orderChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_ORDER')
 
         bot.onText(/order (.+)/, async (msg, match) => {
             const chatId = msg.chat.id;
             const resp = match[1]; // the captured "whatever"
-            console.log('Getting order message: ', resp)
-            console.log('orderChannelId: ', orderChannelId)
             if (chatId.toString() === orderChannelId) {
-                const mockMessage = 'sell 9152 - pair btcusdt - entry 8871.25 - profit 8213 - stop 9184'
+        //         const mockMessage = 'sell 9152 - pair btcusdt - entry 8871.25 - profit 8213 - stop 9184'
                 const orderProps = resp.split('-')
 
                 let side, pair, entry, profit, stop
@@ -126,7 +159,7 @@ async function createOrderWithWait(order, telegramToken, sentinelChannelId, bot,
                     if(order) {
                         await notifyOverviewOrder(order, token, sentinelChannelId)
                         if(waitPrice) {
-
+                            await createOrderWithWait(order)
                         } else {
                             await createOrderWithoutWait(order, token, sentinelChannelId, bot, chatId)
                         }
@@ -146,38 +179,38 @@ async function createOrderWithWait(order, telegramToken, sentinelChannelId, bot,
             } else await bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
         });
 
-        bot.onText(/loan (.+)/, async (msg, match) => {
-            const chatId = msg.chat.id;
-            const resp = match[1]; // the captured "whatever"
-            console.log('Getting load message: ', resp)
-            if (chatId.toString() === orderChannelId) {
-                // const mockMessage = '20% USDT'
-                const splitOrderInfo = resp.split(' ').filter(e => e !== '')
-                const amountPrice = splitOrderInfo[0]
-                const lastInAmountPrice = amountPrice.slice(amountPrice.length - 1)
-                let amountRatio
-                if(lastInAmountPrice === '%' || amountPrice > 1) {
-                    amountRatio = parseNumber(amountPrice.slice(0, amountPrice.length - 1))/100
-                } else if (amountPrice <= 1 && amountPrice > 0) {
-                    amountRatio = amountPrice
-                }
-                const asset = splitOrderInfo[1]
-                const result = await loanAndNotify({asset, amountRatio}, token, sentinelChannelId)
-                await bot.sendMessage(chatId, JSON.stringify(result))
-            } else await bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
-        });
-
-        const registryChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_REGISTRY')
-        bot.onText(/registry (.+)/, (msg, match) => {
-            // 'msg' is the received Message from Telegram
-            // 'match' is the result of executing the regexp above on the text content
-            // of the message
-
-            const chatId = msg.chat.id;
-            const resp = match[1] + ' đã yêu cầu tham gia dự án Moon landing! \nId Telegram: ' + chatId; // the captured "whatever"
-            // send back the matched "whatever" to the chat
-            bot.sendMessage(registryChannelId, resp);
-        });
+        // bot.onText(/loan (.+)/, async (msg, match) => {
+        //     const chatId = msg.chat.id;
+        //     const resp = match[1]; // the captured "whatever"
+        //     console.log('Getting load message: ', resp)
+        //     if (chatId.toString() === orderChannelId) {
+        //         // const mockMessage = '20% USDT'
+        //         const splitOrderInfo = resp.split(' ').filter(e => e !== '')
+        //         const amountPrice = splitOrderInfo[0]
+        //         const lastInAmountPrice = amountPrice.slice(amountPrice.length - 1)
+        //         let amountRatio
+        //         if(lastInAmountPrice === '%' || amountPrice > 1) {
+        //             amountRatio = parseNumber(amountPrice.slice(0, amountPrice.length - 1))/100
+        //         } else if (amountPrice <= 1 && amountPrice > 0) {
+        //             amountRatio = amountPrice
+        //         }
+        //         const asset = splitOrderInfo[1]
+        //         const result = await loanAndNotify({asset, amountRatio}, token, sentinelChannelId)
+        //         await bot.sendMessage(chatId, JSON.stringify(result))
+        //     } else await bot.sendMessage(chatId, 'Xin lỗi, phiền bạn xem lại mình đang ở đâu')
+        // });
+        //
+        // const registryChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_REGISTRY')
+        // bot.onText(/registry (.+)/, (msg, match) => {
+        //     // 'msg' is the received Message from Telegram
+        //     // 'match' is the result of executing the regexp above on the text content
+        //     // of the message
+        //
+        //     const chatId = msg.chat.id;
+        //     const resp = match[1] + ' đã yêu cầu tham gia dự án Moon landing! \nId Telegram: ' + chatId; // the captured "whatever"
+        //     // send back the matched "whatever" to the chat
+        //     bot.sendMessage(registryChannelId, resp);
+        // });
 
     } catch (err) {
         console.log(err)
