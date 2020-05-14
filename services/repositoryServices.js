@@ -52,8 +52,8 @@ async function getTelegramChannelId(channelName) {
   return telegramBotToken.idToken;
 }
 
-async function createOrder(side, amountRatio, pair, entry, profit, stop) {
-  let order = await models.Orders.create({side, amountRatio, pair, entry, profit, stop});
+async function createOrder(side, waitPrice, pair, entry, profit, stop) {
+  let order = await models.Orders.create({side, waitPrice, pair, entry, profit, stop});
   return order;
 }
 

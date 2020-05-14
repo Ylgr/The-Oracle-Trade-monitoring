@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.ENUM('BUY', 'SELL'),
                 allowNull: true
             },
-            amountRatio: {
+            waitPrice: {
                 type: DataTypes.FLOAT,
                 allowNull: true
             },

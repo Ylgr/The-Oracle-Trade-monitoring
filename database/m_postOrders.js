@@ -49,7 +49,11 @@ module.exports = (sequelize, DataTypes) => {
             type: {
                 type: DataTypes.STRING,
                 allowNull: true
-            }
+            },
+            role: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
         },
         {
             tableName: 'post_orders',

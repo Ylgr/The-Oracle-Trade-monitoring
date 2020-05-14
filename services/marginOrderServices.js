@@ -131,15 +131,17 @@ async function repayAllAndNotify(orders, telegramToken, sentinelTelegramChannelI
 
 async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId, orderAmount) {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
+    const allOrders = []
     for (const accountKeyInfo of accountKeyInfos) {
+        const ordersResult = []
         try {
             const binance = new ccxt.binance({
                 apiKey: accountKeyInfo[0],
                 secret: accountKeyInfo[1],
                 enableRateLimit: true
             });
+            const amount = accountKeyInfo[4]
             await binance.loadMarkets();
-            const ordersResult = []
             let totalAmount = 0
             let originOrderId
             for (const order of orders) {
@@ -155,9 +157,9 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                     telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Ko phân tích được tiền sử dụng trong cặp: ' + symbol)
                     return
                 }
-                const marginAccount = await binance.sapiGetMarginAccount()
-                const maxAmount = orderAmount ? orderAmount : marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
-                const quantity =  (maxAmount * order.amountRatio / order.price / orders.length).toFixed(4)
+                // const marginAccount = await binance.sapiGetMarginAccount()
+                // const maxAmount = orderAmount ? orderAmount : marginAccount.userAssets.find(e=> e.asset === 'USDT').free;
+                const quantity =  (amount / order.price / orders.length).toFixed(4)
                 const postOrder = await binance.sapiPostMarginOrder({
                   symbol: symbol,
                   side: order.side,
@@ -179,12 +181,13 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                 amount: Math.floor(totalAmount* 10000) / 10000,
                 originOrderId: originOrderId,
             })
-            return ordersResult
         } catch (e) {
             telegramMessageRequest(telegramToken, sentinelTelegramChannelId, 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
             telegramMessageRequest(telegramToken, accountKeyInfo[3], 'Thất bại khi đặt lệnh, xin thông báo tới Toái Nguyệt để xử lý: \n' + e.stack)
         }
+        allOrders.push(ordersResult)
     }
+    return allOrders
 }
 
 function getOppositeSide(side) {
