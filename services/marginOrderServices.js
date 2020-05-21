@@ -167,7 +167,7 @@ async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannel
                   quantity: quantity,
                   price: order.price,
                   timeInForce: 'GTC',
-                  newClientOrderId: order.id
+                  newClientOrderId: order.originOrderId
                 })
                 // const postOrder = mockPostOrderAndNotifyReturn[orders.indexOf(order)]
                 totalAmount += parseNumber(postOrder.origQty)
