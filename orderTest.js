@@ -19,7 +19,7 @@ function parseNumber(numberString) {
         const orderChannelId = await getTelegramChannelId('TELEGRAM_CHANNEL_ORDER')
 
         //         const mockMessageWithWait = 'sell 9152 - pair btcusdt - entry 8871.25 - profit 8213 - stop 9184'
-        const mockMessageWithoutWait = 'sell 41.98 - pair ltc - entry 43.10 - profit 40.86'
+        const mockMessageWithoutWait = 'sell 41.98 - pair ltcusdt - entry 43.10 - profit 40.86'
 
         let side, pair, entry, profit, stop
         let waitPrice

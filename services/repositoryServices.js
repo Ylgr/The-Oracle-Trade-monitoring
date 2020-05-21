@@ -77,6 +77,11 @@ async function getPostOrderByStatus(status) {
   return orders;
 }
 
+async function getPostOrderEntryPending() {
+  let orders = await models.PostOrders.findAll({status: 'PENDING', role: 'ENTRY'});
+  return orders;
+}
+
 async function createValueOrderDetails(detail) {
   let orders = await models.ValueOrderDetails.create(detail);
   return orders;
@@ -110,5 +115,6 @@ module.exports = {
   getPostOrderByStatus,
   createValueOrderDetails,
   updateFillOrders,
-  createOrUpdatePostOrder
+  createOrUpdatePostOrder,
+  getPostOrderEntryPending
 };

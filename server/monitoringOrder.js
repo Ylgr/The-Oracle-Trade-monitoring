@@ -2,7 +2,14 @@ const { loadSpreadsheet } = require('../services/spreadsheetServices');
 const { telegramMessageRequest } = require('../services/telegramServices');
 const { postOrderAndNotify } = require('../services/marginOrderServices');
 const { isOrderMatching } = require('../services/caculatorServices');
-const { getPostOrderByStatus, getTelegramChannelId, getTelegramBotToken, updateFillOrders, createOrUpdatePostOrder } = require('../services/repositoryServices');
+const {
+    getPostOrderByStatus,
+    getTelegramChannelId,
+    getTelegramBotToken,
+    updateFillOrders,
+    createOrUpdatePostOrder,
+    getPostOrderEntryPending
+} = require('../services/repositoryServices');
 const { uniq } = require('lodash')
 const ccxt = require ('ccxt');
 
@@ -18,6 +25,22 @@ function parseNumber(numberString) {
 const headquartersSpreadsheetRangeIndex = {
     apiInfo : 'API Info!B3:D10'
 };
+
+function entryFlow() {
+
+}
+
+function stopLossFlow() {
+
+}
+
+function takeProfitFlow() {
+
+}
+
+async function getPrice(binance, symbol) {
+    return binance.sapiGetMarginPriceIndex({symbol})
+}
 
 (async () => {
     const telegramScoutChannel = 'TELEGRAM_CHANNEL_SCOUT'
@@ -39,6 +62,14 @@ const headquartersSpreadsheetRangeIndex = {
             await sleep(60000);
             // get waiting order
             try {
+                const entryPendingOrders = await getPostOrderEntryPending()
+                if (entryPendingOrders.length > 0) {
+                    for (const entryOrder of entryPendingOrders) {
+                        const pair = entryOrder.symbol
+                        // TODO do something
+                    }
+                }
+
                 const waitingPostOrders = await getPostOrderByStatus('WAITING')
 
                 if (waitingPostOrders.length === 0) {
@@ -83,7 +114,7 @@ const headquartersSpreadsheetRangeIndex = {
                 }
                 const symbols = uniq(pendingPostOrders.map(e => e.symbol))
                 for (const symbol of symbols) {
-                    const priceIndex = await binance.sapiGetMarginPriceIndex({symbol});
+                    const priceIndex = await getPrice(binance, symbol)
                     telegramMessageRequest(token, telegramScoutId, JSON.stringify(priceIndex, null, 2))
 
                     if(isOrderMatching()) {
