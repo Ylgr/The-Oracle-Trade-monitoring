@@ -129,7 +129,7 @@ async function repayAllAndNotify(orders, telegramToken, sentinelTelegramChannelI
     return repayResults
 }
 
-async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId, orderAmount) {
+async function postOrderAndNotify(orders, telegramToken, sentinelTelegramChannelId) {
     const accountKeyInfos = await loadSpreadsheet(headquartersSpreadsheetRangeIndex.apiInfo);
     const allOrders = []
     for (const accountKeyInfo of accountKeyInfos) {

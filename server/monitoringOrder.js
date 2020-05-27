@@ -26,8 +26,11 @@ const headquartersSpreadsheetRangeIndex = {
     apiInfo : 'API Info!B3:D10'
 };
 
-function entryFlow() {
-
+async function entryFlow(binance, entryOrder, telegramToken, sentinelChannelId) {
+    const pair = entryOrder.symbol
+    if(isOrderMatching(entryOrder.side, getPrice(binance, pair), entryOrder.waitPrice)) {
+        await postOrderAndNotify(entryOrder, token, sentinelChannelId)
+    }
 }
 
 function stopLossFlow() {
@@ -65,8 +68,11 @@ async function getPrice(binance, symbol) {
                 const entryPendingOrders = await getPostOrderEntryPending()
                 if (entryPendingOrders.length > 0) {
                     for (const entryOrder of entryPendingOrders) {
-                        const pair = entryOrder.symbol
-                        // TODO do something
+                       try {
+                           await entryFlow(binance, entryOrder, token, sentinelChannelId)
+                       } catch (e) {
+                           telegramMessageRequest(token, sentinelChannelId, 'Entry error: \n' + e.stack)
+                       }
                     }
                 }
 
