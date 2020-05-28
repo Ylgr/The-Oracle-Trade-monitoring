@@ -27,9 +27,9 @@ const headquartersSpreadsheetRangeIndex = {
 };
 
 async function entryFlow(binance, entryOrder, telegramToken, sentinelChannelId) {
-    const pair = entryOrder.symbol
-    if(isOrderMatching(entryOrder.side, getPrice(binance, pair), entryOrder.waitPrice)) {
-        await postOrderAndNotify(entryOrder, token, sentinelChannelId)
+    const currentPrice = await getPrice(binance, entryOrder.symbol)
+    if(isOrderMatching(entryOrder.side, currentPrice, entryOrder.waitPrice)) {
+        await postOrderAndNotify(entryOrder, telegramToken, sentinelChannelId)
     }
 }
 
@@ -42,7 +42,7 @@ function takeProfitFlow() {
 }
 
 async function getPrice(binance, symbol) {
-    return binance.sapiGetMarginPriceIndex({symbol})
+    return parseFloat((await binance.sapiGetMarginPriceIndex({symbol})).price)
 }
 
 (async () => {
@@ -62,9 +62,9 @@ async function getPrice(binance, symbol) {
         });
         await binance.loadMarkets ();
         while (true) {
-            await sleep(60000);
-            // get waiting order
+            // await sleep(60000);
             try {
+                // Entry flow
                 const entryPendingOrders = await getPostOrderEntryPending()
                 if (entryPendingOrders.length > 0) {
                     for (const entryOrder of entryPendingOrders) {
@@ -74,8 +74,10 @@ async function getPrice(binance, symbol) {
                            telegramMessageRequest(token, sentinelChannelId, 'Entry error: \n' + e.stack)
                        }
                     }
+                    continue
                 }
 
+                // Get waiting order
                 const waitingPostOrders = await getPostOrderByStatus('WAITING')
 
                 if (waitingPostOrders.length === 0) {
@@ -98,6 +100,7 @@ async function getPrice(binance, symbol) {
 
                 if(fillValueOrders.length === 0) continue
 
+                // Stop loss flow
                 const pendingPostOrders = await getPostOrderByStatus('PENDING')
 
                 const stopLossPostOrder = pendingPostOrders.find(e => e.type === 'STOP_LOSS')
@@ -118,6 +121,8 @@ async function getPrice(binance, symbol) {
                         await createOrUpdatePostOrder(stopLossPostOrder)
                     }
                 }
+
+                // Profit flow
                 const symbols = uniq(pendingPostOrders.map(e => e.symbol))
                 for (const symbol of symbols) {
                     const priceIndex = await getPrice(binance, symbol)
@@ -128,7 +133,7 @@ async function getPrice(binance, symbol) {
                     }
                 }
             } catch (e) {
-                telegramMessageRequest(token, telegramScoutId, e.stack)
+                telegramMessageRequest(token, sentinelChannelId, e.stack)
             }
         }
     } catch (err) {

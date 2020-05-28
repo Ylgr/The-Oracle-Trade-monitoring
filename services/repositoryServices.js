@@ -73,12 +73,12 @@ async function createPostOrders(orders) {
 }
 
 async function getPostOrderByStatus(status) {
-  let orders = await models.PostOrders.findAll({status});
+  let orders = await models.PostOrders.findAll({where: {status} });
   return orders;
 }
 
 async function getPostOrderEntryPending() {
-  let orders = await models.PostOrders.findAll({status: 'PENDING', role: 'ENTRY'});
+  let orders = await models.PostOrders.findAll({where : {status: 'PENDING', role: 'ENTRY'} });
   return orders;
 }
 

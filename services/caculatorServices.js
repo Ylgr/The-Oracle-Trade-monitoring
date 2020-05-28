@@ -1,10 +1,10 @@
 
 function isOrderMatching(side, currentPrice, expectedPrice) {
     if(side.toUpperCase() === 'BUY') {
-        return currentPrice >= expectedPrice
+        return currentPrice <= expectedPrice
     }
     if(side.toLowerCase() === 'SELL') {
-        return currentPrice <= expectedPrice
+        return currentPrice >= expectedPrice
     }
 }
 
